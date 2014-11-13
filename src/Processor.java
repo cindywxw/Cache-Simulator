@@ -11,7 +11,7 @@ public class Processor {
 	Cache cache;
 	int id;
 	int hitFlag;
-	public Processor(String dir, Cache c, int id){
+	public Processor(String dir, int id){
 		File file = new File(dir);
 		FileInputStream fis;
 		try {
@@ -31,5 +31,8 @@ public class Processor {
 	}
 	public int getFlag(){
 		return hitFlag;
+	}
+	public BufferedReader getTrace(){
+		return this.trace;
 	}
 }
