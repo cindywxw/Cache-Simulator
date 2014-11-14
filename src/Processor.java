@@ -11,7 +11,7 @@ public class Processor {
 	Cache cache;
 	int id;
 	int hitFlag;
-	public Processor(String dir, int id){
+	public Processor(String dir, int id, String protocol, int cacheSize, int blockSize, int associativity){
 		File file = new File(dir);
 		FileInputStream fis;
 		try {
@@ -21,7 +21,7 @@ public class Processor {
 		this.trace = new BufferedReader(new InputStreamReader(bis));
 		this.hitFlag = 0;
 		this.id = id;
-		this.cache = new Cache();
+		this.cache = new Cache(protocol, cacheSize, blockSize, associativity);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
