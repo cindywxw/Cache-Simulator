@@ -8,7 +8,6 @@ public class TraceReader {
 
 	public static void main(String[] args) throws IOException {
 		coreCount = Integer.parseInt(args[2]); // number of cores
-		int done = 0; // number of traces that have finished
 		Processor[] processorArray = new Processor[coreCount];
 		// Initialize cores
 		String coreString;
@@ -36,16 +35,12 @@ public class TraceReader {
 					Integer.parseInt(args[5]), Integer.parseInt(args[4]));
 		}
 
-		int active = 0;
 		String s;
 		String[] split = new String[2];
 		long address;
 		long cycles = 0;
 		int action;
 		int busAction;
-		int k;
-		int hitFlag = 0; // other Cache has hit
-		int myHitFlag = 0; // current cache has hit
 		Processor p;
 		Quadrupel q;
 
@@ -88,8 +83,15 @@ public class TraceReader {
 							processorArray[i].cache.nextState(q.address,q.busAction);
 						}
 					}
-					if(blockTime == 0) blockTime = 10;
-					q.p.cache.nextState(q.address, q.action);
+					if(q.busAction == 2){
+						blockTime = 0; //Bus only gets blocked for 10 cycles if no cache has valid data for address
+					}else if(q.busAction == 1){ 
+						if(blockTime == 0)blockTime = 10; //No cache has needed data
+					}else{
+						System.out.println("Bus action invalid, aborting!");
+						return;
+					}
+					q.p.cache.nextState(q.address, q.action); 
 				}
 			}
 		}
