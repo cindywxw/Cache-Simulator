@@ -30,7 +30,7 @@ public class Cache {
 
 		// Calculate number of sets
 		int numSets = cacheSize / (associativity * blockSize);
-		
+
 		// Create the cache structure
 		for (int i = 0; i < numSets; i++) {
 			dataCache.add(new CacheSet(associativity));
@@ -78,7 +78,7 @@ public class Cache {
 	}
 
 	private CacheBlock findCacheBlock(long address) {
-		int index  = getFoundIndexPosition(address);
+		int index = getFoundIndexPosition(address);
 		int tag = 0;
 		CacheBlock block = dataCache.get(index).getBlockForTag(tag);
 		return null;
@@ -91,10 +91,39 @@ public class Cache {
 	 * @return matching Cache Block or nil if no match
 	 */
 	private int getFoundIndexPosition(long address) {
-		//Create mask for getting index bits
+		// Create mask for getting index bits
 		int mask = (int) Math.pow(2, indexBits) - 1;
 		long cacheIndex = (address >> offsetBits) & mask;
-		return (int)cacheIndex;
+		return (int) cacheIndex;
+	}
+
+	/**
+	 * Function that checks, depending on protocol and state of cache block if
+	 * action requires a bus action and returns it
+	 * 
+	 * @param address
+	 *            of memory location
+	 * @param action
+	 *            to be performed 2 = read 3 = write
+	 * @return busAction that is performed 0=none/flush 1=busRead 2= busReadEx
+	 */
+	public int needsBus(long address, int action) { // TODO
+		// Function that checks, depending on protocol and state of cache block
+		// if action requires a bus action
+
+		return 0;
+	}
+
+	/**
+	 * Function that checks if there is a valid value in this cache for given
+	 * address
+	 * 
+	 * @param address
+	 *            of memory location
+	 * @return true if hit, false if miss
+	 */
+	public boolean isHit(long address) { // TODO
+		return false;
 	}
 
 	public String toString() {
