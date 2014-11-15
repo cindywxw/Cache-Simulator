@@ -1,9 +1,13 @@
 import java.io.IOException;
+import java.util.Queue;
 
 public class TraceReader {
+	private static Queue<Quadrupel> busList;
+	private static int blockTime;
+	private static int coreCount;
 
 	public static void main(String[] args) throws IOException {
-		int coreCount = Integer.parseInt(args[2]); // number of cores
+		coreCount = Integer.parseInt(args[2]); // number of cores
 		int done = 0; // number of traces that have finished
 		Processor[] processorArray = new Processor[coreCount];
 		// Initialize cores
@@ -31,6 +35,7 @@ public class TraceReader {
 					+ ".prg", i, args[0], Integer.parseInt(args[3]),
 					Integer.parseInt(args[5]), Integer.parseInt(args[4]));
 		}
+
 		int active = 0;
 		String s;
 		String[] split = new String[2];
@@ -41,61 +46,62 @@ public class TraceReader {
 		int k;
 		int hitFlag = 0; // other Cache has hit
 		int myHitFlag = 0; // current cache has hit
+		Processor p;
+		Quadrupel q;
 
-		// While there is still a trace not finished
-		while (done < coreCount) {
-			if (processorArray[active] != null
-					&& processorArray[active].getTrace().ready()) {
-				// Read trace line of active processor
-				s = processorArray[active].getTrace().readLine();
-				// System.out.println(s);
-				split = s.split(" ");
-				address = Long.parseLong(split[1]);
-				action = Integer.parseInt(split[0]);
-				// Process processor action
-				if (Integer.parseInt(split[0]) != 0) {
-					busAction = processorArray[active].cache.nextState(address,
-							action);
-					myHitFlag = processorArray[active].getFlag();
-					// Process snooping actions
-					if (busAction != 0) {
-						k = active;
-						active = (active + 1) % coreCount;
-						while (active != k) {
-							processorArray[active].cache.nextState(address,
-									busAction);
-							hitFlag = processorArray[active].getFlag();
-							active = (active + 1) % coreCount;
-						}
+		while (true) {
+			cycles++;
 
-					}
-					//Increase cycle number depending on cache hits/misses
-					if (myHitFlag == 0) {
-						if (hitFlag == 0) {
-							cycles = cycles + 10;
-						} else{
-							cycles = cycles + 1;
-							hitFlag = 0;
+			for (int i = 0; i < coreCount; i++) {// Process cycle operations for
+													// all cores
+				p = getNextProcessor(processorArray, i);
+				if (p == null)
+					return;// All traces have been processed
+				if (!p.inQueue) { // Processor not blocked by bing in BusQueue
+					s = p.getCycle();
+					split = s.split(" ");
+					action = Integer.parseInt(split[0]);
+					if (action != 0) { // Action is read or write
+						address = Long.parseLong(split[1]);
+						busAction = p.cache.needsBus(address, action);
+						if (busAction == 0) { // Read or Write doesn't require
+												// bus
+							p.cache.nextState(address, action);
+						} else {// Read or write requires bus
+							busList.add(new Quadrupel(p, address, busAction, action));
+							p.inQueue = true;
 						}
-					}else{
-						myHitFlag = 0;
 					}
 				}
-				cycles++;
-				active = (active + 1) % coreCount;
-				
+			}
+			// Process bus
+			if (blockTime > 0) { //Bus blocked by data transfer
+				blockTime--;
 			} else {
-				if (processorArray[active] == null)
-					active = (active + 1) % coreCount;
-				else {
-					processorArray[active] = null;
-					done++;
-					System.out
-							.println("Trace " + active + 1 + " has finished!");
-					active = (active + 1) % coreCount;
+				q = busList.poll();
+				if (q != null) {
+					for (int i = 0; i < coreCount; i++) {
+						if (i != q.p.id) {
+							if(processorArray[i].cache.isHit(q.address)){ // Other cache has needed data
+								blockTime = 1;
+							}
+							processorArray[i].cache.nextState(q.address,q.busAction);
+						}
+					}
+					if(blockTime == 0) blockTime = 10;
+					q.p.cache.nextState(q.address, q.action);
 				}
-
 			}
 		}
+	}
+
+	public static Processor getNextProcessor(Processor[] p, int id) {
+		int j = id;
+		for (int i = 0; i < coreCount; i++) {
+			j = (j + 1) % coreCount;
+			if (p[j].done == false)
+				return p[j];
+		}
+		return null;
 	}
 }
