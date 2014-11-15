@@ -1,5 +1,38 @@
 import java.util.ArrayList;
 
+enum CacheState {
+	MODIFIED, EXCLUSIVE, SHARED, INVALID
+}
+
+enum BusState {
+	NONE(0), BUSRD(1), BUSWR(2);
+	
+	private int type;
+	
+	BusState(int input) {
+		type = input;
+	}
+	
+	int getType() {
+		return type;
+	}
+}
+
+enum  Action {
+	READ(0), WRITE(1), BUS_READ(2), BUS_RDX(3);
+	
+	private int type;
+	
+	Action(int input) {
+		type = input;
+	}
+	
+	int getType() {
+		return type;
+	}
+	
+}
+
 public class Cache {
 
 	// Protocol constants
@@ -14,7 +47,6 @@ public class Cache {
 
 	private String protocol;
 
-	private boolean blocked;
 
 	/**
 	 * Initializes the cache
@@ -39,7 +71,6 @@ public class Cache {
 		calculateBitLengths(blockSize, numSets);
 
 		this.protocol = protocol;
-		this.blocked = false;
 	}
 
 	/**
@@ -67,21 +98,198 @@ public class Cache {
 	 * @return bus action that is performed 0=none/flush 1=busRead 2= busReadEx
 	 */
 	public int nextState(long address, int action) {
-		int busAction = 0;
 
-		CacheBlock found = findCacheBlock(address);
+		//Init
+		BusState busAction = BusState.NONE;
 
-		int cacheIndex = getFoundIndexPosition(address);
-		System.out.println("Index:" + cacheIndex);
+		int index = getAddressIndexValue(address);
+		int tag = getAddressTagValue(address);
+		
+		CacheState currentState = null;
+		CacheState nextState = null;
+		
+		//Get cache block for given address
+		CacheBlock matchingBlock = dataCache.get(index).getBlockForTag(tag);
 
-		return busAction;
+		if (matchingBlock != null) {
+
+			// TODO:SET FLAG IF HIT
+			if (protocol.equals(PROTOCOL_MSI)) {
+				currentState = getCurrentStateMSI(matchingBlock);
+			} else if (protocol.equals(PROTOCOL_MESI)) {
+				currentState = getCurrentStateMESI(matchingBlock);
+			} else {
+				System.out.println("Ooops, wrong protocol!");
+			}
+
+		} else {
+			//Block does not exist in cache
+			currentState = CacheState.INVALID;
+		}
+		//Get next state
+		nextState = getNextStateMSI(currentState, Action.values()[action]);
+		
+		return busAction.getType();
+	}
+	
+	/**
+	 * Return next state for MSI
+	 * @param current
+	 * @param action
+	 * @return
+	 */
+	private CacheState getNextStateMSI(CacheState current, Action action) {
+		switch (current) {
+		case MODIFIED:
+			switch (action) {
+			case READ:
+				return CacheState.MODIFIED;
+			case WRITE:
+				return CacheState.MODIFIED;
+			case BUS_READ:
+				return CacheState.SHARED;// Need to flush
+			case BUS_RDX:
+				return CacheState.INVALID;// Need to flush
+			}
+		case SHARED:
+			switch (action) {
+			case READ:
+				return CacheState.SHARED;
+			case WRITE:
+				return CacheState.MODIFIED;// Need to send BusRd_Ex
+			case BUS_READ:
+				return CacheState.SHARED;
+			case BUS_RDX:
+				return CacheState.INVALID;// Need to flush
+			}
+		case INVALID:
+			switch (action) {
+			case READ:
+				return CacheState.SHARED;
+			case WRITE:
+				return CacheState.MODIFIED;
+			case BUS_READ:
+				return CacheState.INVALID;
+			case BUS_RDX:
+				return CacheState.INVALID;
+			}
+		}
+		
+		return null;
 	}
 
-	private CacheBlock findCacheBlock(long address) {
-		int index = getFoundIndexPosition(address);
-		int tag = 0;
-		CacheBlock block = dataCache.get(index).getBlockForTag(tag);
+	/**
+	 * Return next state for MESI
+	 * @param current
+	 * @param action
+	 * @return
+	 */
+	private CacheState getNextStateMESI(CacheState current, Action action) {
+		switch (current) {
+		case MODIFIED:
+			switch (action) {
+			case READ:
+				return CacheState.MODIFIED;
+			case WRITE:
+				return CacheState.MODIFIED;
+			case BUS_READ:
+				return CacheState.SHARED;// Need to flush
+			case BUS_RDX:
+				return CacheState.INVALID;// Need to flush
+			}
+		case EXCLUSIVE:
+			switch (action) {
+			case READ:
+				return CacheState.EXCLUSIVE;
+			case WRITE:
+				return CacheState.MODIFIED;
+			case BUS_READ:
+				return CacheState.SHARED;
+			case BUS_RDX:
+				return CacheState.INVALID;// Need to flush
+			}
+		case SHARED:
+			switch (action) {
+			case READ:
+				return CacheState.SHARED;
+			case WRITE:
+				return CacheState.MODIFIED;// Need to send BusRd_Ex
+			case BUS_READ:
+				return CacheState.SHARED;
+			case BUS_RDX:
+				return CacheState.INVALID;// Need to flush
+			}
+		case INVALID:
+			switch (action) {
+			case READ:
+				return CacheState.EXCLUSIVE;
+			case WRITE:
+				return CacheState.MODIFIED;
+			case BUS_READ:
+				return CacheState.INVALID;
+			case BUS_RDX:
+				return CacheState.INVALID;
+			}
+		}
+		
 		return null;
+	}
+
+	/**
+	 * Current state based on MSI valid and dirty bit
+	 * 
+	 * @param matchingBlock
+	 * @return current state
+	 */
+	private CacheState getCurrentStateMSI(CacheBlock matchingBlock) {
+		CacheState current_state;
+
+		if (matchingBlock.getValidBit() && matchingBlock.getDirtyBit()) {
+			current_state = CacheState.MODIFIED;
+		} else if (matchingBlock.getValidBit() && !matchingBlock.getDirtyBit()) {
+			current_state = CacheState.SHARED;
+		} else {
+			current_state = CacheState.INVALID;
+		}
+
+		return current_state;
+	}
+
+	/**
+	 * Current state based on MESI valid and dirty bit
+	 * 
+	 * @param matchingBlock
+	 * @return current state
+	 */
+	private CacheState getCurrentStateMESI(CacheBlock matchingBlock) {
+		CacheState current_state;
+
+		if (matchingBlock.getValidBit() && !matchingBlock.getDirtyBit()
+				&& matchingBlock.getExclusiveBit()) {
+			current_state = CacheState.EXCLUSIVE;
+		} else if (matchingBlock.getValidBit() && matchingBlock.getDirtyBit()
+				&& !matchingBlock.getExclusiveBit()) {
+			current_state = CacheState.MODIFIED;
+		} else if (matchingBlock.getValidBit() && !matchingBlock.getDirtyBit()
+				&& !matchingBlock.getExclusiveBit()) {
+			current_state = CacheState.SHARED;
+		} else {
+			current_state = CacheState.INVALID;
+		}
+
+		return current_state;
+	}
+
+	/**
+	 * Get tag value
+	 * 
+	 * @param address
+	 * @return tag value
+	 */
+	private int getAddressTagValue(long address) {
+		// Create mask for getting index bits
+		long cacheTag = address >> (offsetBits + indexBits);
+		return (int) cacheTag;
 	}
 
 	/**
@@ -90,7 +298,7 @@ public class Cache {
 	 * @param address
 	 * @return matching Cache Block or nil if no match
 	 */
-	private int getFoundIndexPosition(long address) {
+	private int getAddressIndexValue(long address) {
 		// Create mask for getting index bits
 		int mask = (int) Math.pow(2, indexBits) - 1;
 		long cacheIndex = (address >> offsetBits) & mask;

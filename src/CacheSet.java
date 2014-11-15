@@ -16,9 +16,9 @@ public class CacheSet {
 	public CacheSet(int associativity) {
 		blocks = new ArrayList<CacheBlock>();
 
-		// Add the cache blocks based on number of ways
+		// Add empty cache blocks based on number of ways
 		for (int i = 0; i < associativity; i++) {
-			blocks.add(new CacheBlock());
+			blocks.add(new CacheBlock(false, false, false,  0));
 		}
 
 		ways = associativity;
