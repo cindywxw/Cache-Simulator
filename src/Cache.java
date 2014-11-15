@@ -18,7 +18,7 @@ public class Cache {
 
 	/**
 	 * Initializes the cache
-	 * 
+	 *
 	 * @param protocol
 	 * @param cache_size
 	 * @param block_size
@@ -30,7 +30,7 @@ public class Cache {
 
 		// Calculate number of sets
 		int numSets = cacheSize / (associativity * blockSize);
-
+		
 		// Create the cache structure
 		for (int i = 0; i < numSets; i++) {
 			dataCache.add(new CacheSet(associativity));
@@ -44,7 +44,7 @@ public class Cache {
 
 	/**
 	 * Calculate bit lengths of tag, index and offset
-	 * 
+	 *
 	 * @param blockSize
 	 * @param numSets
 	 */
@@ -61,7 +61,7 @@ public class Cache {
 	/**
 	 * Calculates nextState of cache entry and updates cache given actions
 	 * 1.read 2.write super.setFlag(1); Please set Flag in case of cache hit
-	 * 
+	 *
 	 * @param address
 	 * @param action
 	 * @return bus action that is performed 0=none/flush 1=busRead 2= busReadEx
@@ -73,17 +73,20 @@ public class Cache {
 
 		int cacheIndex = getFoundIndexPosition(address);
 		System.out.println("Index:" + cacheIndex);
-		
+
 		return busAction;
 	}
-	
+
 	private CacheBlock findCacheBlock(long address) {
-		
+		int index  = getFoundIndexPosition(address);
+		int tag = 0;
+		CacheBlock block = dataCache.get(index).getBlockForTag(tag);
+		return null;
 	}
 
 	/**
 	 * Returns the cache block index with the matching tag
-	 * 
+	 *
 	 * @param address
 	 * @return matching Cache Block or nil if no match
 	 */

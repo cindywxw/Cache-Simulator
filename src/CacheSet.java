@@ -23,6 +23,15 @@ public class CacheSet {
 
 		ways = associativity;
 	}
+	
+	public CacheBlock getBlockForTag(int tag) {
+		for(CacheBlock block: blocks) {
+			if(block.getTag() == tag) {
+				return block;
+			} 
+		}
+		return null;
+	}
 
 	public String toString() {
 		String out =  "{" + "[" + lruBits + "]";

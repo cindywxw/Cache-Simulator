@@ -15,6 +15,18 @@ public class CacheBlock {
 		tag = 0;
 	}
 	
+	public boolean getValidBit() {
+		return valid;
+	}
+	
+	public boolean getDirtyBit() {
+		return dirty;
+	}
+	
+	public int getTag() {
+		return tag;
+	}
+	
 	public String toString() {
 		return "[" + valid + " " + dirty + " " + tag + "]";
 	}
