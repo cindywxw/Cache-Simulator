@@ -10,7 +10,7 @@ public class Processor {
 	public BufferedReader trace;
 	public Cache cache;
 	public int hitFlag;
-	public boolean blocked;
+	public boolean inQueue;
 	public boolean done;
 	public int id;
 
@@ -28,7 +28,7 @@ public class Processor {
 			s[0] = this.trace.readLine();
 			s[1] = this.trace.readLine();
 			this.hitFlag = 0;
-			this.blocked = false;
+			this.inQueue = false;
 			this.done = false;
 			this.cache = new Cache(protocol, cacheSize, blockSize,
 					associativity);

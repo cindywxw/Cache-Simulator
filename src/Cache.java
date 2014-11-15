@@ -58,10 +58,31 @@ public class Cache {
 	 *            to be performed 1.read 2.write
 	 * @return bus action that is performed 0=none/flush 1=busRead 2= busReadEx
 	 */
-	public int nextState(long address, int action) {
+	public void nextState(long address, int action) { //TODO
 		int busAction = 0;
-		// super.setFlag(1); Please set Flag in case of cache hit
-		return busAction;
+		return;
+	}
+	/**
+	 * Function that checks, depending on protocol and state of cache block if action requires a bus action and returns it
+	 * 
+	 * @param address
+	 *            of memory location
+	 * @param action
+	 *            to be performed 2 = read 3 = write
+	 * @return busAction that is performed 0=none/flush 1=busRead 2= busReadEx
+	 */
+	public int needsBus(long address, int action){ //TODO
+		//Function that checks, depending on protocol and state of cache block if action requires a bus action
+		
+		return 0;
+	}
+	/**
+	 * Function that checks if there is a valid value in this cache for given address
+	 * @param address of memory location
+	 * @return true if hit, false if miss
+	 */
+	public boolean isHit(long address){ // TODO
+		return false;
 	}
 	
 	public String toString() {
