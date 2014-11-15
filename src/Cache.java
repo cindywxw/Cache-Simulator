@@ -5,12 +5,16 @@ public class Cache {
 	// Protocol constants
 	private static final String PROTOCOL_MESI = "MESI";
 	private static final String PROTOCOL_MSI = "MSI";
+	private static final int WORD_SIZE = 16;
 
 	private ArrayList<CacheSet> dataCache;
 	private int offsetBits;
 	private int indexBits;
 	private int tagBits;
+
 	private String protocol;
+
+	private boolean blocked;
 
 	/**
 	 * Initializes the cache
@@ -20,7 +24,8 @@ public class Cache {
 	 * @param block_size
 	 * @param associativity
 	 */
-	public Cache(String protocol, int cacheSize, int blockSize, int associativity) {
+	public Cache(String protocol, int cacheSize, int blockSize,
+			int associativity) {
 		this.dataCache = new ArrayList<CacheSet>();
 
 		// Calculate number of sets
@@ -32,8 +37,9 @@ public class Cache {
 		}
 
 		calculateBitLengths(blockSize, numSets);
-		
-		this.protocol = protocol;  
+
+		this.protocol = protocol;
+		this.blocked = false;
 	}
 
 	/**
@@ -45,34 +51,58 @@ public class Cache {
 	private void calculateBitLengths(int blockSize, int numSets) {
 		// Set bit lengths
 		this.indexBits = (int) (Math.log(numSets) / Math.log(2));
-		this.offsetBits = (int) (Math.log(blockSize / 2) / Math.log(2));
+		this.offsetBits = (int) (Math.log(blockSize / WORD_SIZE) / Math.log(2));
 		this.tagBits = 32 - this.indexBits - this.offsetBits;
+
+		System.out.println("Bits Index:" + indexBits + " Offset:" + offsetBits
+				+ " Tag:" + tagBits);
 	}
 
 	/**
-	 * Calculates nextState of cache entry and updates cache
+	 * Calculates nextState of cache entry and updates cache given actions
+	 * 1.read 2.write super.setFlag(1); Please set Flag in case of cache hit
 	 * 
 	 * @param address
-	 *            of memory location
 	 * @param action
-	 *            to be performed 1.read 2.write
 	 * @return bus action that is performed 0=none/flush 1=busRead 2= busReadEx
 	 */
 	public int nextState(long address, int action) {
 		int busAction = 0;
-		// super.setFlag(1); Please set Flag in case of cache hit
+
+		CacheBlock found = findCacheBlock(address);
+
+		int cacheIndex = getFoundIndexPosition(address);
+		System.out.println("Index:" + cacheIndex);
+		
 		return busAction;
 	}
 	
+	private CacheBlock findCacheBlock(long address) {
+		
+	}
+
+	/**
+	 * Returns the cache block index with the matching tag
+	 * 
+	 * @param address
+	 * @return matching Cache Block or nil if no match
+	 */
+	private int getFoundIndexPosition(long address) {
+		//Create mask for getting index bits
+		int mask = (int) Math.pow(2, indexBits) - 1;
+		long cacheIndex = (address >> offsetBits) & mask;
+		return (int)cacheIndex;
+	}
+
 	public String toString() {
 		String out = "------\n";
-		
-		for(CacheSet set: dataCache) {
+
+		for (CacheSet set : dataCache) {
 			out += set.toString() + "\n";
 		}
-		
+
 		out += "------";
-		
+
 		return out;
 	}
 
