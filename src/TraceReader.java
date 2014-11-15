@@ -1,9 +1,11 @@
 import java.io.IOException;
+import java.util.Queue;
 
 public class TraceReader {
-
+	private Queue<Triplet> busList;
+	private static int coreCount;
 	public static void main(String[] args) throws IOException {
-		int coreCount = Integer.parseInt(args[2]); // number of cores
+		coreCount = Integer.parseInt(args[2]); // number of cores
 		int done = 0; // number of traces that have finished
 		Processor[] processorArray = new Processor[coreCount];
 		// Initialize cores
@@ -31,6 +33,7 @@ public class TraceReader {
 					+ ".prg", i, args[0], Integer.parseInt(args[3]),
 					Integer.parseInt(args[5]), Integer.parseInt(args[4]));
 		}
+		
 		int active = 0;
 		String s;
 		String[] split = new String[2];
@@ -48,7 +51,7 @@ public class TraceReader {
 					&& processorArray[active].getTrace().ready()) {
 				// Read trace line of active processor
 				s = processorArray[active].getTrace().readLine();
-				// System.out.println(s);
+				 System.out.println(s);
 				split = s.split(" ");
 				address = Long.parseLong(split[1]);
 				action = Integer.parseInt(split[0]);
@@ -97,5 +100,13 @@ public class TraceReader {
 
 			}
 		}
+	}
+	public Processor getNextProcessor(Processor[] p, int id){
+		int j = id;
+		for(int i = 0; i<coreCount;i++){
+			j = (j+1)%coreCount;
+			if(p[j].done == false) return p[j];
+		}
+		return null;
 	}
 }
