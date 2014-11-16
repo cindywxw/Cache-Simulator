@@ -39,6 +39,8 @@ public class TraceReader {
 		String[] split = new String[2];
 		long address;
 		long cycles = 0;
+		long busCount = 0;
+		int busNotUsed = 0;
 		int action;
 		int busAction;
 		Processor p;
@@ -50,9 +52,12 @@ public class TraceReader {
 			for (int i = 0; i < coreCount; i++) {// Process cycle operations for
 													// all cores
 				p = getNextProcessor(processorArray, i);
-				if (p == null)
+				if (p == null){
+					printResults(cycles, processorArray, busCount, busNotUsed);
 					return;// All traces have been processed
+				}
 				if (!p.inQueue) { // Processor not blocked by bing in BusQueue
+					p.cycles++;
 					s = p.getCycle();
 					split = s.split(" ");
 					action = Integer.parseInt(split[0]);
@@ -61,9 +66,11 @@ public class TraceReader {
 						busAction = p.cache.needsBus(address, action);
 						if (busAction == 0) { // Read or Write doesn't require
 												// bus
+							p.hits++;
 							p.cache.nextState(address, action);
 						} else {// Read or write requires bus
 							busList.add(new Quadrupel(p, address, busAction, action));
+							p.misses++;
 							p.inQueue = true;
 						}
 					}
@@ -75,24 +82,27 @@ public class TraceReader {
 			} else {
 				q = busList.poll();
 				if (q != null) {
+					busCount = busCount + 16;
 					for (int i = 0; i < coreCount; i++) {
 						if (i != q.p.id) {
 							if(processorArray[i].cache.isHit(q.address)){ // Other cache has needed data
 								blockTime = 1;
+								processorArray[i].cache.nextState(q.address,q.busAction);
 							}
-							processorArray[i].cache.nextState(q.address,q.busAction);
 						}
 					}
-					if(q.busAction == 2){
-						blockTime = 0; //Bus only gets blocked for 10 cycles if no cache has valid data for address
-					}else if(q.busAction == 1){ 
+					if(q.busAction == 2){ //BusReadEX
+						blockTime = 10; 
+					}else if(q.busAction == 1){ //BusRead
 						if(blockTime == 0)blockTime = 10; //No cache has needed data
 					}else{
 						System.out.println("Bus action invalid, aborting!");
 						return;
 					}
 					q.p.cache.nextState(q.address, q.action); 
-				}
+					q.p.inQueue = false;
+				}else busNotUsed++;
+				
 			}
 		}
 	}
@@ -106,4 +116,25 @@ public class TraceReader {
 		}
 		return null;
 	}
+	
+	public static void printResults(long cycles, Processor[] processors, long busCount, int busNotUsed){
+		int length = processors.length;
+		System.out.println("Cycles taken: " + cycles);
+		System.out.println("Bytes transfered on bus: " + busCount);
+		System.out.println("Cycles in which bus was not used: " + busNotUsed);
+		for(int i = 1; i<= length; i++){
+			System.out.println("Number of execution Cycles Processor " + i + ": " + processors[i-1].cycles);
+			System.out.println("Number of execution Cycles Processor " + i + ": " + processors[i-1].hits);
+			System.out.println("Number of execution Cycles Processor " + i + ": " + processors[i-1].misses);
+		}
+		
+	}
 }
+
+//Implement different actions for PrRead in case of Invalid (Shared or Exclusive) (Action 4 = PrReadExclusive), which means that no ther cache has the data I want to read
+//BusReadEx blocks for 10 cycles
+//Right now, states are being modified before the data transfer has finished, that might be fine though
+//Need to add miss/hit counters for processors
+//Add bus counter in bytes
+//Add cycle counter for each processor
+//Adjust action/busAction numbers to the ones in cache
