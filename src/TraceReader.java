@@ -77,6 +77,7 @@ public class TraceReader {
 				}
 			}
 			// Process bus
+			boolean hitFlag = false;
 			if (blockTime > 0) { //Bus blocked by data transfer
 				blockTime--;
 			} else {
@@ -87,6 +88,7 @@ public class TraceReader {
 						if (i != q.p.id) {
 							if(processorArray[i].cache.isHit(q.address)){ // Other cache has needed data
 								blockTime = 1;
+								hitFlag = true; //Accessing shared data
 								processorArray[i].cache.nextState(q.address,q.busAction);
 							}
 						}
@@ -94,13 +96,16 @@ public class TraceReader {
 					if(q.busAction == 2){ //BusReadEX
 						blockTime = 10; 
 					}else if(q.busAction == 1){ //BusRead
-						if(blockTime == 0)blockTime = 10; //No cache has needed data
+						if(!hitFlag){
+							blockTime = 10; //No cache has needed data
+						}
 					}else{
 						System.out.println("Bus action invalid, aborting!");
 						return;
 					}
 					q.p.cache.nextState(q.address, q.action); 
 					q.p.inQueue = false;
+					hitFlag = false;
 				}else busNotUsed++;
 				
 			}
@@ -131,10 +136,11 @@ public class TraceReader {
 	}
 }
 
-//Implement different actions for PrRead in case of Invalid (Shared or Exclusive) (Action 4 = PrReadExclusive), which means that no ther cache has the data I want to read
+//Implement different actions for PrRead in case of Invalid (Shared or Exclusive) (Action 4 = PrRead(NotShared)), which means that no ther cache has the data I want to read
 //BusReadEx blocks for 10 cycles
 //Right now, states are being modified before the data transfer has finished, that might be fine though
 //Need to add miss/hit counters for processors
 //Add bus counter in bytes
 //Add cycle counter for each processor
 //Adjust action/busAction numbers to the ones in cache
+//ProcessorWrite has to go on bus in case of current state is shared
