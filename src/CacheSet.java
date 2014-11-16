@@ -32,6 +32,10 @@ public class CacheSet {
 		}
 		return null;
 	}
+	
+	public void installBlock(CacheBlock newBlock) {
+		
+	}
 
 	public String toString() {
 		String out =  "{" + "[" + lruBits + "]";

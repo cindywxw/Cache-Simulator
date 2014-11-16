@@ -1,7 +1,17 @@
 import java.util.ArrayList;
 
 enum CacheState {
-	MODIFIED, EXCLUSIVE, SHARED, INVALID
+	MODIFIED(0), EXCLUSIVE(1), SHARED(2), INVALID(3);
+
+	private int type;
+
+	CacheState(int input) {
+		type = input;
+	}
+
+	int getType() {
+		return type;
+	}
 }
 
 enum BusState {
@@ -101,13 +111,9 @@ public class Cache {
 		// Init
 		BusState busState = BusState.NONE;
 
-		int index = getAddressIndexValue(address);
-		int tag = getAddressTagValue(address);
+		CacheBlock matchingBlock = findHitCacheBlock(address);
 
 		CacheState currentState = null;
-
-		// Get cache block for given address
-		CacheBlock matchingBlock = dataCache.get(index).getBlockForTag(tag);
 
 		// Calculate current state
 		if (matchingBlock != null) {
@@ -130,12 +136,28 @@ public class Cache {
 		if (protocol.equals(PROTOCOL_MSI)) {
 			busState = getNextBusStateMSI(currentState, Action.values()[action]);
 		} else if (protocol.equals(PROTOCOL_MESI)) {
-			busState = getNextBusStateMESI(currentState, Action.values()[action]);
+			busState = getNextBusStateMESI(currentState,
+					Action.values()[action]);
 		} else {
 			System.out.println("Ooops, wrong protocol!");
 		}
 
 		return busState.getType();
+	}
+
+	/**
+	 * Finds a matching cache block in the cache
+	 * 
+	 * @param address
+	 * @param action
+	 */
+	private CacheBlock findHitCacheBlock(long address) {
+		int index = getAddressIndexValue(address);
+		int tag = getAddressTagValue(address);
+
+		// Get cache block for given address
+		CacheBlock matchingBlock = dataCache.get(index).getBlockForTag(tag);
+		return matchingBlock;
 	}
 
 	/**
@@ -145,7 +167,88 @@ public class Cache {
 	 * @param action
 	 */
 	public void updateToNextState(long address, int action) {
+
+		int index = getAddressIndexValue(address);
+		int tag = getAddressTagValue(address);
+
+		// Get cache block for given address
+		CacheBlock matchingBlock = dataCache.get(index).getBlockForTag(tag);
+
+		CacheState currentState = null;
+		CacheState nextState = null;
+
+		// Calculate current state
+		if (matchingBlock != null) {
+
+			// TODO:SET FLAG IF HIT
+			if (protocol.equals(PROTOCOL_MSI)) {
+				currentState = getCurrentStateMSI(matchingBlock);
+			} else if (protocol.equals(PROTOCOL_MESI)) {
+				currentState = getCurrentStateMESI(matchingBlock);
+			} else {
+				System.out.println("Ooops, wrong protocol!");
+			}
+
+		} else {
+			// Block does not exist in cache
+			currentState = CacheState.INVALID;
+		}
+
+		// Get next cache state
+		if (protocol.equals(PROTOCOL_MSI)) {
+			nextState = getNextStateMSI(currentState, Action.values()[action]);
+		} else if (protocol.equals(PROTOCOL_MESI)) {
+			nextState = getNextStateMESI(currentState, Action.values()[action]);
+		} else {
+			System.out.println("Ooops, wrong protocol!");
+		}
+
+		updateCacheBlock(matchingBlock, index, tag, nextState);
+	}
+
+	/**
+	 * Update the cache
+	 * 
+	 * @param address
+	 * @param action
+	 */
+	private void updateCacheBlock(CacheBlock block, int index, int tag,
+			CacheState next) {
+			
+		boolean createdBlock = false;
+
+		if (block == null) {
+			block = new CacheBlock(false, false, false, tag);
+			createdBlock = true;
+		}
 		
+		//set bits based on next state
+		switch (next) {
+		case MODIFIED:
+			block.setValidBit(true);
+			block.setDirtyBit(true);
+			block.setExclusiveBit(false);
+			break;
+		case EXCLUSIVE:
+			block.setValidBit(true);
+			block.setDirtyBit(false);
+			block.setExclusiveBit(true);
+			break;
+		case SHARED:
+			block.setValidBit(true);
+			block.setDirtyBit(false);
+			block.setExclusiveBit(false);
+			break;
+		case INVALID:
+			block.setValidBit(false);
+			block.setDirtyBit(false);
+			block.setExclusiveBit(false);
+			break;
+		}
+
+		if(createdBlock && next != CacheState.INVALID) {
+			dataCache.get(index).installBlock(block);
+		}
 	}
 
 	/**
@@ -453,7 +556,35 @@ public class Cache {
 	 * @return true if hit, false if miss
 	 */
 	public boolean isHit(long address) { // TODO
-		return false;
+
+		CacheState currentState = null;
+
+		// Get cache block for given address
+		CacheBlock matchingBlock = findHitCacheBlock(address);
+
+		// Calculate current state
+		if (matchingBlock != null) {
+
+			if (protocol.equals(PROTOCOL_MSI)) {
+				currentState = getCurrentStateMSI(matchingBlock);
+			} else if (protocol.equals(PROTOCOL_MESI)) {
+				currentState = getCurrentStateMESI(matchingBlock);
+			} else {
+				System.out.println("Ooops, wrong protocol!");
+			}
+
+		} else {
+			// Block does not exist in cache
+			currentState = CacheState.INVALID;
+		}
+
+		// hit miss check
+		if (currentState == CacheState.INVALID) {
+			return false;
+		} else {
+			return true;
+		}
+
 	}
 
 	public String toString() {
