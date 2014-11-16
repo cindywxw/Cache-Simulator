@@ -5,32 +5,32 @@ enum CacheState {
 }
 
 enum BusState {
-	NONE(0), BUSRD(1), BUSWR(2);
-	
+	NONE(0), BUSRD(1), BUSRDX(2);
+
 	private int type;
-	
+
 	BusState(int input) {
 		type = input;
 	}
-	
+
 	int getType() {
 		return type;
 	}
 }
 
-enum  Action {
-	READ(0), WRITE(1), BUS_READ(2), BUS_RDX(3);
-	
+enum Action {
+	READ(0), WRITE(1), BUS_RD(2), BUS_RDX(3), READ_E(4);
+
 	private int type;
-	
+
 	Action(int input) {
 		type = input;
 	}
-	
+
 	int getType() {
 		return type;
 	}
-	
+
 }
 
 public class Cache {
@@ -46,7 +46,6 @@ public class Cache {
 	private int tagBits;
 
 	private String protocol;
-
 
 	/**
 	 * Initializes the cache
@@ -97,20 +96,20 @@ public class Cache {
 	 * @param action
 	 * @return bus action that is performed 0=none/flush 1=busRead 2= busReadEx
 	 */
-	public int nextState(long address, int action) {
+	public int getNextBusState(long address, int action) {
 
-		//Init
-		BusState busAction = BusState.NONE;
+		// Init
+		BusState busState = BusState.NONE;
 
 		int index = getAddressIndexValue(address);
 		int tag = getAddressTagValue(address);
-		
+
 		CacheState currentState = null;
-		CacheState nextState = null;
-		
-		//Get cache block for given address
+
+		// Get cache block for given address
 		CacheBlock matchingBlock = dataCache.get(index).getBlockForTag(tag);
 
+		// Calculate current state
 		if (matchingBlock != null) {
 
 			// TODO:SET FLAG IF HIT
@@ -123,17 +122,148 @@ public class Cache {
 			}
 
 		} else {
-			//Block does not exist in cache
+			// Block does not exist in cache
 			currentState = CacheState.INVALID;
 		}
-		//Get next state
-		nextState = getNextStateMSI(currentState, Action.values()[action]);
-		
-		return busAction.getType();
+
+		// Get next bus state
+		if (protocol.equals(PROTOCOL_MSI)) {
+			busState = getNextBusStateMSI(currentState, Action.values()[action]);
+		} else if (protocol.equals(PROTOCOL_MESI)) {
+			busState = getNextBusStateMESI(currentState, Action.values()[action]);
+		} else {
+			System.out.println("Ooops, wrong protocol!");
+		}
+
+		return busState.getType();
 	}
-	
+
+	/**
+	 * Moves the given cache block to the next state
+	 * 
+	 * @param address
+	 * @param action
+	 */
+	public void updateToNextState(long address, int action) {
+		
+	}
+
+	/**
+	 * Get the next state of the bus for the MSI protocol
+	 * 
+	 * @param current
+	 * @param action
+	 * @return new BusState
+	 */
+	private BusState getNextBusStateMSI(CacheState current, Action action) {
+		switch (current) {
+		case MODIFIED:
+			switch (action) {
+			case READ:
+				return BusState.NONE;
+			case WRITE:
+				return BusState.NONE;
+			case BUS_RD:
+				return BusState.NONE;// Need to flush
+			case BUS_RDX:
+				return BusState.NONE;// Need to flush
+			}
+		case SHARED:
+			switch (action) {
+			case READ:
+				return BusState.NONE;
+			case WRITE:
+				return BusState.BUSRDX;// Need to send BusRd_Ex
+			case BUS_RD:
+				return BusState.NONE;
+			case BUS_RDX:
+				return BusState.NONE;// Need to flush
+			}
+		case INVALID:
+			switch (action) {
+			case READ:
+				return BusState.BUSRD;
+			case WRITE:
+				return BusState.BUSRDX;
+			case BUS_RD:
+				return BusState.NONE;
+			case BUS_RDX:
+				return BusState.NONE;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Get the next state of the bus for the MESI protocol
+	 * 
+	 * @param current
+	 * @param action
+	 * @return new BusState
+	 */
+	private BusState getNextBusStateMESI(CacheState current, Action action) {
+		switch (current) {
+		case MODIFIED:
+			switch (action) {
+			case READ:
+				return BusState.NONE;
+			case READ_E:
+				return BusState.NONE;
+			case WRITE:
+				return BusState.NONE;
+			case BUS_RD:
+				return BusState.NONE;// Need to flush
+			case BUS_RDX:
+				return BusState.NONE;// Need to flush
+			}
+		case SHARED:
+			switch (action) {
+			case READ:
+				return BusState.NONE;
+			case READ_E:
+				return BusState.NONE;
+			case WRITE:
+				return BusState.BUSRDX;// Need to send BusRd_Ex
+			case BUS_RD:
+				return BusState.NONE;
+			case BUS_RDX:
+				return BusState.NONE;// Need to flush
+			}
+		case EXCLUSIVE:
+			switch (action) {
+			case READ:
+				return BusState.NONE;
+			case READ_E:
+				return BusState.NONE;
+			case WRITE:
+				return BusState.NONE;// Need to send BusRd_Ex
+			case BUS_RD:
+				return BusState.NONE;
+			case BUS_RDX:
+				return BusState.NONE;// Need to flush
+			}
+		case INVALID:
+			switch (action) {
+			case READ:
+				return BusState.BUSRD;
+			case READ_E:
+				return BusState.BUSRD;
+			case WRITE:
+				return BusState.BUSRDX;
+			case BUS_RD:
+				return BusState.NONE;
+			case BUS_RDX:
+				return BusState.NONE;
+			}
+		}
+
+		return null;
+	}
+
 	/**
 	 * Return next state for MSI
+	 * 
 	 * @param current
 	 * @param action
 	 * @return
@@ -146,7 +276,7 @@ public class Cache {
 				return CacheState.MODIFIED;
 			case WRITE:
 				return CacheState.MODIFIED;
-			case BUS_READ:
+			case BUS_RD:
 				return CacheState.SHARED;// Need to flush
 			case BUS_RDX:
 				return CacheState.INVALID;// Need to flush
@@ -157,7 +287,7 @@ public class Cache {
 				return CacheState.SHARED;
 			case WRITE:
 				return CacheState.MODIFIED;// Need to send BusRd_Ex
-			case BUS_READ:
+			case BUS_RD:
 				return CacheState.SHARED;
 			case BUS_RDX:
 				return CacheState.INVALID;// Need to flush
@@ -168,18 +298,19 @@ public class Cache {
 				return CacheState.SHARED;
 			case WRITE:
 				return CacheState.MODIFIED;
-			case BUS_READ:
+			case BUS_RD:
 				return CacheState.INVALID;
 			case BUS_RDX:
 				return CacheState.INVALID;
 			}
 		}
-		
+
 		return null;
 	}
 
 	/**
 	 * Return next state for MESI
+	 * 
 	 * @param current
 	 * @param action
 	 * @return
@@ -190,9 +321,11 @@ public class Cache {
 			switch (action) {
 			case READ:
 				return CacheState.MODIFIED;
+			case READ_E:
+				return CacheState.MODIFIED;
 			case WRITE:
 				return CacheState.MODIFIED;
-			case BUS_READ:
+			case BUS_RD:
 				return CacheState.SHARED;// Need to flush
 			case BUS_RDX:
 				return CacheState.INVALID;// Need to flush
@@ -201,9 +334,11 @@ public class Cache {
 			switch (action) {
 			case READ:
 				return CacheState.EXCLUSIVE;
+			case READ_E:
+				return CacheState.EXCLUSIVE;
 			case WRITE:
 				return CacheState.MODIFIED;
-			case BUS_READ:
+			case BUS_RD:
 				return CacheState.SHARED;
 			case BUS_RDX:
 				return CacheState.INVALID;// Need to flush
@@ -212,9 +347,11 @@ public class Cache {
 			switch (action) {
 			case READ:
 				return CacheState.SHARED;
+			case READ_E:
+				return CacheState.SHARED;
 			case WRITE:
 				return CacheState.MODIFIED;// Need to send BusRd_Ex
-			case BUS_READ:
+			case BUS_RD:
 				return CacheState.SHARED;
 			case BUS_RDX:
 				return CacheState.INVALID;// Need to flush
@@ -222,16 +359,18 @@ public class Cache {
 		case INVALID:
 			switch (action) {
 			case READ:
+				return CacheState.SHARED;
+			case READ_E:
 				return CacheState.EXCLUSIVE;
 			case WRITE:
 				return CacheState.MODIFIED;
-			case BUS_READ:
+			case BUS_RD:
 				return CacheState.INVALID;
 			case BUS_RDX:
 				return CacheState.INVALID;
 			}
 		}
-		
+
 		return null;
 	}
 
@@ -303,23 +442,6 @@ public class Cache {
 		int mask = (int) Math.pow(2, indexBits) - 1;
 		long cacheIndex = (address >> offsetBits) & mask;
 		return (int) cacheIndex;
-	}
-
-	/**
-	 * Function that checks, depending on protocol and state of cache block if
-	 * action requires a bus action and returns it
-	 * 
-	 * @param address
-	 *            of memory location
-	 * @param action
-	 *            to be performed 2 = read 3 = write
-	 * @return busAction that is performed 0=none/flush 1=busRead 2= busReadEx
-	 */
-	public int needsBus(long address, int action) { // TODO
-		// Function that checks, depending on protocol and state of cache block
-		// if action requires a bus action
-
-		return 0;
 	}
 
 	/**
