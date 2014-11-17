@@ -1,10 +1,12 @@
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.Queue;
 
 public class TraceReader {
-	private static Queue<Quadrupel> busList;
+	private static String path = "/home/user/git/Cache-Simulator/";
 	private static int blockTime;
 	private static int coreCount;
+	static int done = 0;
 /*
  * Actions: 0: Fetch Instruction
  * 			1: Nothing
@@ -16,6 +18,12 @@ public class TraceReader {
  * 			
  */
 	public static void main(String[] args) throws IOException {
+		System.out.println("Protocol: " + args[0]);
+		System.out.println("Benchmark: " + args[1]);
+		System.out.println("Cores: " + args[2]);
+		System.out.println("Cache Size: " + args[3]);
+		System.out.println("Associativity: " + args[4]);
+		System.out.println("Block Size: " + args[5]);
 		coreCount = Integer.parseInt(args[2]); // number of cores
 		Processor[] processorArray = new Processor[coreCount];
 		// Initialize cores
@@ -38,8 +46,9 @@ public class TraceReader {
 			return;
 		}
 		// Array of Cores; A core becomes null when its trace is finished
+		//arguments: protocol(0), benchmark(1), cores(2), cache size(3), associativity(4), block size(5)
 		for (int i = 0; i < coreCount; i++) {
-			processorArray[i] = new Processor(coreString + args[1] + (i + 1)
+			processorArray[i] = new Processor(path + coreString + args[1] + (i + 1)
 					+ ".prg", i, args[0], Integer.parseInt(args[3]),
 					Integer.parseInt(args[5]), Integer.parseInt(args[4]));
 		}
@@ -54,24 +63,26 @@ public class TraceReader {
 		int busAction;
 		Processor p;
 		Quadrupel q = null;
-
+		LinkedList<Quadrupel> busList = new LinkedList<Quadrupel>();
 		while (true) {
 			cycles++;
 
 			for (int i = 0; i < coreCount; i++) {// Process cycle operations for
 													// all cores
 				p = getNextProcessor(processorArray, i);
+				i = i + done;
+				done = 0;
 				if (p == null){
 					printResults(cycles, processorArray, busCount, busNotUsed);
 					return;// All traces have been processed
 				}
-				if (!p.inQueue) { // Processor not blocked by bing in BusQueue
+				if (!p.inQueue) { // Processor not blocked by being in BusQueue
 					p.cycles++;
 					s = p.getCycle();
 					split = s.split(" ");
 					action = Integer.parseInt(split[0]);
 					if (action != 0) { // Action is read or write
-						address = Long.parseLong(split[1]);
+						address = Long.parseLong(split[1],16);
 						busAction = p.cache.needsBus(address, action);
 						if (busAction == 0) { // Read or Write doesn't require
 												// bus
@@ -95,7 +106,7 @@ public class TraceReader {
 					q.p.cache.nextState(q.address, q.action);
 					q.p.inQueue = false;
 				}
-				q = busList.poll();
+				q = busList.pollFirst();
 				if (q != null) {
 					busCount = busCount + 16;
 					for (int i = 0; i < coreCount; i++) {
@@ -121,18 +132,21 @@ public class TraceReader {
 						return;
 					}
 					hitFlag = false;
-				}else busNotUsed++;
+				}else{
+					busNotUsed++;
+				}
 				
 			}
 		}
 	}
 
 	public static Processor getNextProcessor(Processor[] p, int id) {
-		int j = id;
-		for (int i = 0; i < coreCount; i++) {
-			j = (j + 1) % coreCount;
-			if (p[j].done == false)
-				return p[j];
+		for (int i = id; i < coreCount; i++) {
+			if (p[i].done == false){
+				return p[i];
+			}else {
+				done++;
+			}
 		}
 		return null;
 	}
@@ -151,3 +165,4 @@ public class TraceReader {
 	}
 }
 //Adjust action/busAction numbers to the ones in cache
+//Rewrite getNextProcessor();
