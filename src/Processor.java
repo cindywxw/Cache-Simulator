@@ -13,6 +13,9 @@ public class Processor {
 	public boolean inQueue;
 	public boolean done;
 	public int id;
+	public int misses;
+	public int hits;
+	public long cycles;
 
 	public Processor(String dir, int id, String protocol, int cacheSize, int blockSize,
 			int associativity) {
@@ -32,6 +35,9 @@ public class Processor {
 			this.done = false;
 			this.cache = new Cache(protocol, cacheSize, blockSize,
 					associativity);
+			this.misses = 0;
+			this.hits = 0;
+			this.cycles = 0;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
