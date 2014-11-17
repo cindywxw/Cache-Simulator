@@ -5,7 +5,16 @@ public class TraceReader {
 	private static Queue<Quadrupel> busList;
 	private static int blockTime;
 	private static int coreCount;
-
+/*
+ * Actions: 0: Fetch Instruction
+ * 			1: Nothing
+ * 			2: PrRead
+ * 			3: PrWrite
+ * 			5: PrRead(Shared) (Just for special case PrRead from invalid)
+ * 			6: BusRead
+ * 			7: BusWrite
+ * 			
+ */
 	public static void main(String[] args) throws IOException {
 		coreCount = Integer.parseInt(args[2]); // number of cores
 		Processor[] processorArray = new Processor[coreCount];
@@ -44,7 +53,7 @@ public class TraceReader {
 		int action;
 		int busAction;
 		Processor p;
-		Quadrupel q;
+		Quadrupel q = null;
 
 		while (true) {
 			cycles++;
@@ -81,6 +90,11 @@ public class TraceReader {
 			if (blockTime > 0) { //Bus blocked by data transfer
 				blockTime--;
 			} else {
+				if(q != null){
+					//Processor Action is executed when data transmit is done and bus is free
+					q.p.cache.nextState(q.address, q.action);
+					q.p.inQueue = false;
+				}
 				q = busList.poll();
 				if (q != null) {
 					busCount = busCount + 16;
@@ -93,18 +107,19 @@ public class TraceReader {
 							}
 						}
 					}
-					if(q.busAction == 2){ //BusReadEX
+					if(q.busAction == 5){ //BusReadEX
 						blockTime = 10; 
-					}else if(q.busAction == 1){ //BusRead
+					}else if(q.busAction == 4){ //BusRead
 						if(!hitFlag){
 							blockTime = 10; //No cache has needed data
+						}else{
+							blockTime = 1;
+							q.action = 5; // Read of shared data
 						}
 					}else{
 						System.out.println("Bus action invalid, aborting!");
 						return;
 					}
-					q.p.cache.nextState(q.address, q.action); 
-					q.p.inQueue = false;
 					hitFlag = false;
 				}else busNotUsed++;
 				
@@ -129,18 +144,10 @@ public class TraceReader {
 		System.out.println("Cycles in which bus was not used: " + busNotUsed);
 		for(int i = 1; i<= length; i++){
 			System.out.println("Number of execution Cycles Processor " + i + ": " + processors[i-1].cycles);
-			System.out.println("Number of execution Cycles Processor " + i + ": " + processors[i-1].hits);
-			System.out.println("Number of execution Cycles Processor " + i + ": " + processors[i-1].misses);
+			System.out.println("Number of cache hits Processor " + i + ": " + processors[i-1].hits);
+			System.out.println("Number of cache misses Cycles Processor " + i + ": " + processors[i-1].misses);
 		}
 		
 	}
 }
-
-//Implement different actions for PrRead in case of Invalid (Shared or Exclusive) (Action 4 = PrRead(NotShared)), which means that no ther cache has the data I want to read
-//BusReadEx blocks for 10 cycles
-//Right now, states are being modified before the data transfer has finished, that might be fine though
-//Need to add miss/hit counters for processors
-//Add bus counter in bytes
-//Add cycle counter for each processor
 //Adjust action/busAction numbers to the ones in cache
-//ProcessorWrite has to go on bus in case of current state is shared
