@@ -171,6 +171,7 @@ public class Cache {
 		int index = getAddressIndexValue(address);
 		int tag = getAddressTagValue(address);
 
+		
 		// Get cache block for given address
 		CacheBlock matchingBlock = dataCache.get(index).getBlockForTag(tag);
 

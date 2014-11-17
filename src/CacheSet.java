@@ -12,40 +12,42 @@ public class CacheSet {
 	private int lruBits;
 	private int ways;
 	private ArrayList<CacheBlock> blocks;
+	int index = 0;
 
 	public CacheSet(int associativity) {
 		blocks = new ArrayList<CacheBlock>();
 
 		// Add empty cache blocks based on number of ways
 		for (int i = 0; i < associativity; i++) {
-			blocks.add(new CacheBlock(false, false, false,  0));
+			blocks.add(new CacheBlock(false, false, false, 0));
 		}
 
 		ways = associativity;
 	}
-	
+
 	public CacheBlock getBlockForTag(int tag) {
-		for(CacheBlock block: blocks) {
-			if(block.getTag() == tag) {
+		for (CacheBlock block : blocks) {
+			if (block.getTag() == tag) {
 				return block;
-			} 
+			}
 		}
 		return null;
 	}
-	
+
 	public void installBlock(CacheBlock newBlock) {
-		
+		blocks.set(index, newBlock);
+		index = (index + 1) % ways;
 	}
 
 	public String toString() {
-		String out =  "{" + "[" + lruBits + "]";
-		
-		for(CacheBlock blk: blocks) {
+		String out = "{" + "[" + lruBits + "]";
+
+		for (CacheBlock blk : blocks) {
 			out += " " + blk;
 		}
-		
+
 		out += "}";
-		
+
 		return out;
 	}
 }
