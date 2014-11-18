@@ -1,3 +1,4 @@
+import java.util.Map;
 
 public class CacheTest {
 
@@ -16,6 +17,8 @@ public class CacheTest {
 //		dataCache.updateToNextState(0x00000080, 1);
 		
 		System.out.println(dataCache);
+
 	}
+		
 
 }

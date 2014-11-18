@@ -193,7 +193,7 @@ public class Cache {
 			}
 			//TEST
 			System.out.println("Current Cache State:" + currentState.name());
-			System.out.println("Current Cache State:" + matchingBlock.toString());
+			System.out.println("Current Cache Block:" + matchingBlock.toString());
 
 		} else {
 			// Block does not exist in cache
