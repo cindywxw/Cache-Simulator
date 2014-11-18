@@ -12,12 +12,13 @@ public class TraceReader {
  * 			1: Nothing
  * 			2: PrRead
  * 			3: PrWrite
- * 			5: PrRead(Shared) (Just for special case PrRead from invalid)
- * 			6: BusRead
- * 			7: BusWrite
+ * 			4: BusRead
+ * 			5: BusReadEx
+ * 			6: PrRead(Shared) (Just for special case PrRead from invalid)
  * 			
  */
 	public static void main(String[] args) throws IOException {
+		long start = System.nanoTime();
 		System.out.println("Protocol: " + args[0]);
 		System.out.println("Benchmark: " + args[1]);
 		System.out.println("Cores: " + args[2]);
@@ -73,6 +74,7 @@ public class TraceReader {
 				i = i + done;
 				done = 0;
 				if (p == null){
+					System.out.println("---------Time Taken: " + (System.nanoTime() - start)/1000000000 + "s------------");
 					printResults(cycles, processorArray, busCount, busNotUsed);
 					return;// All traces have been processed
 				}
@@ -83,11 +85,11 @@ public class TraceReader {
 					action = Integer.parseInt(split[0]);
 					if (action != 0) { // Action is read or write
 						address = Long.parseLong(split[1],16);
-						busAction = p.cache.needsBus(address, action);
+						busAction = p.cache.getNextBusState(address, action);
 						if (busAction == 0) { // Read or Write doesn't require
 												// bus
 							p.hits++;
-							p.cache.nextState(address, action);
+							p.cache.updateToNextState(address, action);
 						} else {// Read or write requires bus
 							busList.add(new Quadrupel(p, address, busAction, action));
 							p.misses++;
@@ -103,7 +105,7 @@ public class TraceReader {
 			} else {
 				if(q != null){
 					//Processor Action is executed when data transmit is done and bus is free
-					q.p.cache.nextState(q.address, q.action);
+					q.p.cache.updateToNextState(q.address, q.action);
 					q.p.inQueue = false;
 				}
 				q = busList.pollFirst();
@@ -114,7 +116,7 @@ public class TraceReader {
 							if(processorArray[i].cache.isHit(q.address)){ // Other cache has needed data
 								blockTime = 1;
 								hitFlag = true; //Accessing shared data
-								processorArray[i].cache.nextState(q.address,q.busAction);
+								processorArray[i].cache.updateToNextState(q.address,q.busAction);
 							}
 						}
 					}
@@ -123,9 +125,9 @@ public class TraceReader {
 					}else if(q.busAction == 4){ //BusRead
 						if(!hitFlag){
 							blockTime = 10; //No cache has needed data
+							q.action = 6; // Read of exclusive data
 						}else{
 							blockTime = 1;
-							q.action = 5; // Read of shared data
 						}
 					}else{
 						System.out.println("Bus action invalid, aborting!");
@@ -164,5 +166,3 @@ public class TraceReader {
 		
 	}
 }
-//Adjust action/busAction numbers to the ones in cache
-//Rewrite getNextProcessor();

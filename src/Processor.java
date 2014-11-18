@@ -17,8 +17,8 @@ public class Processor {
 	public int hits;
 	public long cycles;
 
-	public Processor(String dir, int id, String protocol, int cacheSize, int blockSize,
-			int associativity) {
+	public Processor(String dir, int id, String protocol, int cacheSize,
+			int blockSize, int associativity) {
 		File file = new File(dir);
 		FileInputStream fis;
 		try {
@@ -58,20 +58,24 @@ public class Processor {
 	public String getCycle() {
 		String result = null;
 		try {
-			if (s[0].startsWith("0")
-					&& (s[1].startsWith("2") || s[1].startsWith("3"))) {
-				result = s[1];
-				s[0] = this.trace.readLine();
-				s[1] = this.trace.readLine();
-			} else {
+			if (s[1] == null) {
 				result = s[0];
-				s[0] = s[1];
-				s[1] = this.trace.readLine();
-			}
-			if(s[0] == null && s[1] == null){
 				this.done = true;
+			} else {
+				if (s[0].startsWith("0")
+						&& (s[1].startsWith("2") || s[1].startsWith("3"))) {
+					result = s[1];
+					s[0] = this.trace.readLine();
+					s[1] = this.trace.readLine();
+				} else {
+					result = s[0];
+					s[0] = s[1];
+					s[1] = this.trace.readLine();
+				}
+				if (s[0] == null && s[1] == null) {
+					this.done = true;
+				}
 			}
-			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
