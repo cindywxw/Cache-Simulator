@@ -134,10 +134,10 @@ public class Cache {
 
 		// Get next bus state
 		if (protocol.equals(PROTOCOL_MSI)) {
-			busState = getNextBusStateMSI(currentState, Action.values()[action + 2]);
+			busState = getNextBusStateMSI(currentState, Action.values()[action - 2]);
 		} else if (protocol.equals(PROTOCOL_MESI)) {
 			busState = getNextBusStateMESI(currentState,
-					Action.values()[action + 2]);
+					Action.values()[action - 2]);
 		} else {
 			System.out.println("Ooops, wrong protocol!");
 		}
@@ -197,9 +197,9 @@ public class Cache {
 
 		// Get next cache state
 		if (protocol.equals(PROTOCOL_MSI)) {
-			nextState = getNextStateMSI(currentState, Action.values()[action + 2]);
+			nextState = getNextStateMSI(currentState, Action.values()[action - 2]);
 		} else if (protocol.equals(PROTOCOL_MESI)) {
-			nextState = getNextStateMESI(currentState, Action.values()[action + 2]);
+			nextState = getNextStateMESI(currentState, Action.values()[action - 2]);
 		} else {
 			System.out.println("Ooops, wrong protocol!");
 		}
