@@ -1,6 +1,5 @@
 import java.io.IOException;
 import java.util.LinkedList;
-import java.util.Queue;
 
 public class TraceReader {
 	private static String path = "/home/user/git/Cache-Simulator/";
@@ -14,7 +13,7 @@ public class TraceReader {
  * 			3: PrWrite
  * 			4: BusRead
  * 			5: BusReadEx
- * 			6: PrRead(Shared) (Just for special case PrRead from invalid)
+ * 			6: PrRead(Exclusive) (Just for special case PrRead from invalid)
  * 			
  */
 	public static void main(String[] args) throws IOException {

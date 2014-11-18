@@ -142,7 +142,7 @@ public class Cache {
 			System.out.println("Ooops, wrong protocol!");
 		}
 
-		System.out.println("Next BUS State:" + busState.name());
+//		System.out.println("Next BUS State:" + busState.name());
 
 		return busState.getType();
 	}
