@@ -50,7 +50,7 @@ public class CacheBlock {
 	}
 	
 	public String toString() {
-		return "[" + valid + " " + dirty + " " + tag + "]";
+		return "[" + valid + " " + dirty + " " + exclusive + " " + tag + "]";
 	}
 	
 }

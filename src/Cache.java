@@ -5,25 +5,25 @@ enum CacheState {
 
 	private int type;
 
-	CacheState(int input) {
+	private CacheState(int input) {
 		type = input;
 	}
 
-	int getType() {
+	public int getType() {
 		return type;
 	}
 }
 
 enum BusState {
-	NONE(0), BUSRD(1), BUSRDX(2);
+	NONE(0), BUSRD(4), BUSRDX(5);
 
 	private int type;
 
-	BusState(int input) {
+	private BusState(int input) {
 		type = input;
 	}
 
-	int getType() {
+	public int getType() {
 		return type;
 	}
 }
@@ -33,11 +33,11 @@ enum Action {
 
 	private int type;
 
-	Action(int input) {
+	private Action(int input) {
 		type = input;
 	}
 
-	int getType() {
+	public int getType() {
 		return type;
 	}
 
@@ -134,10 +134,10 @@ public class Cache {
 
 		// Get next bus state
 		if (protocol.equals(PROTOCOL_MSI)) {
-			busState = getNextBusStateMSI(currentState, Action.values()[action]);
+			busState = getNextBusStateMSI(currentState, Action.values()[action + 2]);
 		} else if (protocol.equals(PROTOCOL_MESI)) {
 			busState = getNextBusStateMESI(currentState,
-					Action.values()[action]);
+					Action.values()[action + 2]);
 		} else {
 			System.out.println("Ooops, wrong protocol!");
 		}
@@ -197,9 +197,9 @@ public class Cache {
 
 		// Get next cache state
 		if (protocol.equals(PROTOCOL_MSI)) {
-			nextState = getNextStateMSI(currentState, Action.values()[action]);
+			nextState = getNextStateMSI(currentState, Action.values()[action + 2]);
 		} else if (protocol.equals(PROTOCOL_MESI)) {
-			nextState = getNextStateMESI(currentState, Action.values()[action]);
+			nextState = getNextStateMESI(currentState, Action.values()[action + 2]);
 		} else {
 			System.out.println("Ooops, wrong protocol!");
 		}
