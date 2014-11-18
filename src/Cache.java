@@ -192,14 +192,14 @@ public class Cache {
 				System.out.println("Ooops, wrong protocol!");
 			}
 			//TEST
-			System.out.println("Current Cache State:" + currentState.name());
-			System.out.println("Current Cache Block:" + matchingBlock.toString());
+//			System.out.println("Current Cache State:" + currentState.name());
+//			System.out.println("Current Cache Block:" + matchingBlock.toString());
 
 		} else {
 			// Block does not exist in cache
 			currentState = CacheState.INVALID;
 			//TEST
-			System.out.println("Current Cache Block: NOT IN CACHE");
+//			System.out.println("Current Cache Block: NOT IN CACHE");
 		}
 
 		// Get next cache state
@@ -211,7 +211,7 @@ public class Cache {
 			System.out.println("Ooops, wrong protocol!");
 		}
 		
-		System.out.println("Next Cache State:" + nextState.name());
+//		System.out.println("Next Cache State:" + nextState.name());
 
 		updateCacheBlock(matchingBlock, index, tag, nextState);
 	}
@@ -590,10 +590,10 @@ public class Cache {
 
 		// hit miss check
 		if (currentState == CacheState.INVALID) {
-			System.out.println("Address:" + Long.toHexString(address) + " was a MISS!");
+//			System.out.println("Address:" + Long.toHexString(address) + " was a MISS!");
 			return false;
 		} else {
-			System.out.println("Address:" + Long.toHexString(address) + " was a HIT!");
+//			System.out.println("Address:" + Long.toHexString(address) + " was a HIT!");
 			return true;
 		}
 
