@@ -250,9 +250,7 @@ public class Cache {
 			block.setExclusiveBit(false);
 			break;
 		case INVALID:
-			block.setValidBit(false);
-			block.setDirtyBit(false);
-			block.setExclusiveBit(false);
+			dataCache.get(index).remove(block);
 			break;
 		}
 

@@ -26,6 +26,10 @@ public class CacheSet {
 			return found;
 		}
 	}
+	
+	public void remove(CacheBlock block) {
+		blocks.remove(block.getTag());
+	}
 
 	public void installBlock(CacheBlock newBlock) {
 		blocks.put(newBlock.getTag(), newBlock);

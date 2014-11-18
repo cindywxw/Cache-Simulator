@@ -49,6 +49,10 @@ public synchronized void put (K key, V value) {
 public synchronized void clear() {
    map.clear(); }
 
+public synchronized void remove(K key) {
+	map.remove(key);
+}
+
 /**
 * Returns the number of used entries in the cache.
 * @return the number of entries currently in the cache.
