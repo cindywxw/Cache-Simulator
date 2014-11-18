@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Data structure to represent the cache row, consisting of a cache blocks
@@ -9,44 +9,36 @@ import java.util.ArrayList;
  */
 public class CacheSet {
 
-	private int lruBits;
 	private int ways;
-	private ArrayList<CacheBlock> blocks;
-	int index = 0;
+	private LRUCache<Integer, CacheBlock> blocks;
 
 	public CacheSet(int associativity) {
-		blocks = new ArrayList<CacheBlock>();
-
-		// Add empty cache blocks based on number of ways
-		for (int i = 0; i < associativity; i++) {
-			blocks.add(new CacheBlock(false, false, false, 0));
-		}
+		blocks = new LRUCache<Integer, CacheBlock>(associativity);
 
 		ways = associativity;
 	}
 
 	public CacheBlock getBlockForTag(int tag) {
-		for (CacheBlock block : blocks) {
-			if (block.getTag() == tag) {
-				return block;
-			}
+		CacheBlock found = blocks.get(tag);
+		if (found == null) {
+			return null;
+		} else {
+			return found;
 		}
-		return null;
 	}
 
 	public void installBlock(CacheBlock newBlock) {
-		blocks.set(index, newBlock);
-		index = (index + 1) % ways;
+		blocks.put(newBlock.getTag(), newBlock);
 	}
 
 	public String toString() {
-		String out = "{" + "[" + lruBits + "]";
+		String out = "{";
 
-		for (CacheBlock blk : blocks) {
-			out += " " + blk;
+		for (Map.Entry<Integer, CacheBlock> e : blocks.getAll()) {
+			out += e.getValue().toString();
 		}
 
-		out += "}";
+		out += " }";
 
 		return out;
 	}
