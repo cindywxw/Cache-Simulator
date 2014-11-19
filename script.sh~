@@ -1,0 +1,23 @@
+#!/bin/sh
+
+file=("WEATHER" "FFT")
+protocol=("mesi" "msi")
+cores=(1 2 4 8)
+cache=(1024 2048 4094 8192 16384 32768)
+ass=(1 2 4)
+block=(8 16 32 64 128)
+
+for a in "${protocol[@]}"
+do
+	for b in "${file[@]}"
+	do
+		for c in "${cores[@]}"
+		do
+			for d in "${cache[@]}"
+			do
+				for e in "${ass[@]}"
+				do
+					for f in "${block[@]}"
+					do
+					echo "------------" $a $b $c $d $e $f
+					echo java -jar sim.jar $a $b $c $d $e $f 

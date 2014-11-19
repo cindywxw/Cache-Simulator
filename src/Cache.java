@@ -48,7 +48,7 @@ public class Cache {
 	// Protocol constants
 	private static final String PROTOCOL_MESI = "MESI";
 	private static final String PROTOCOL_MSI = "MSI";
-	private static final int WORD_SIZE = 16;
+	private static final int WORD_SIZE = 2;
 
 	private ArrayList<CacheSet> dataCache;
 	private int offsetBits;

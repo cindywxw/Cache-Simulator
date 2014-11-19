@@ -13,8 +13,8 @@ public class Processor {
 	public boolean inQueue;
 	public boolean done;
 	public int id;
-	public int misses;
-	public int hits;
+	public long misses;
+	public long hits;
 	public long cycles;
 
 	public Processor(String dir, int id, String protocol, int cacheSize,

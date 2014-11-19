@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.LinkedList;
 
 public class TraceReader {
@@ -60,6 +61,7 @@ public class TraceReader {
 		Processor p;
 		Quadrupel q = null;
 		LinkedList<Quadrupel> busList = new LinkedList<Quadrupel>();
+		PrintWriter writer = new PrintWriter("outBig.txt", "UTF-8");
 		while (true) {
 			for (int j = 0; j < coreCount; j++) {
 				if (processorArray[j].done)
@@ -70,8 +72,10 @@ public class TraceReader {
 						+ (System.nanoTime() - start) / 1000000000
 						+ "s------------");
 				printResults(cycles, processorArray, busCount, busNotUsed);
+				writer.close();
 				return;// All traces have been processed
 			}
+			
 			cycles++;
 			for (int i = 0; i < coreCount; i++) {// Process cycle operations for
 													// all cores
@@ -88,8 +92,11 @@ public class TraceReader {
 						busAction = p.cache.getNextBusState(address, action);
 						if (p.cache.isHit(address)) {
 							p.hits++;
+//							writer.println(s + " hit");
 						} else {
 							p.misses++;
+//							writer.println(s + " miss");
+
 						}
 						if (busAction == 0) { // Read or Write doesn't
 												// require
