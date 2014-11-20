@@ -61,7 +61,7 @@ public class TraceReader {
 		Processor p;
 		Quadrupel q = null;
 		LinkedList<Quadrupel> busList = new LinkedList<Quadrupel>();
-		PrintWriter writer = new PrintWriter("outBig.txt", "UTF-8");
+//		PrintWriter writer = new PrintWriter("outBig.txt", "UTF-8");
 		while (true) {
 			for (int j = 0; j < coreCount; j++) {
 				if (processorArray[j].done)
@@ -72,11 +72,12 @@ public class TraceReader {
 						+ (System.nanoTime() - start) / 1000000000
 						+ "s------------");
 				printResults(cycles, processorArray, busCount, busNotUsed);
-				writer.close();
+//				writer.close();
 				return;// All traces have been processed
 			}
 			
 			cycles++;
+			if(cycles % 4000000 == 0) System.out.println(processorArray[0].cache);
 			for (int i = 0; i < coreCount; i++) {// Process cycle operations for
 													// all cores
 				p = processorArray[i];
@@ -85,10 +86,12 @@ public class TraceReader {
 					// BusQueue
 					p.cycles++;
 					s = p.getCycle();
+//					System.out.println(s);
 					split = s.split(" ");
 					action = Integer.parseInt(split[0]);
 					if (action != 0) { // Action is read or write
 						address = Long.parseLong(split[1], 16);
+						address = address >> 8;
 						busAction = p.cache.getNextBusState(address, action);
 						if (p.cache.isHit(address)) {
 							p.hits++;
@@ -170,9 +173,12 @@ public class TraceReader {
 	public static void printResults(long cycles, Processor[] processors,
 			long busCount, int busNotUsed) {
 		int length = processors.length;
+		long misses = 0;
+		long hits = 0;
 		System.out.println("Cycles taken: " + cycles);
 		System.out.println("Bytes transfered on bus: " + busCount);
 		System.out.println("Cycles in which bus was not used: " + busNotUsed);
+		
 		for (int i = 1; i <= length; i++) {
 			System.out.println("Number of execution Cycles Processor " + i
 					+ ": " + processors[i - 1].cycles);
@@ -180,9 +186,12 @@ public class TraceReader {
 					+ processors[i - 1].hits);
 			System.out.println("Number of cache misses Processor " + i + ": "
 					+ processors[i - 1].misses);
-			System.out.println("Total Updates: "
-					+ processors[i - 1].cache.counter);
+			misses = misses + processors[i-1].misses;
+			hits = hits + processors[i-1].hits;
+			System.out.println("Lines: " + processors[i-1].lines);
+			
 		}
-
+			System.out.println("Miss Rate: " + 100*misses/(misses + hits) + "%");
+			System.out.println("------------------");
 	}
 }
