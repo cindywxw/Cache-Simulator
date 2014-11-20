@@ -29,7 +29,7 @@ enum BusState {
 }
 
 enum Action {
-	READ(0), WRITE(1), BUS_RD(2), BUS_RDX(3), READ_E(4);
+	READ(0), WRITE(1), BUS_RD(2), BUS_RDX(3), READ_E(4), BUS_UPGR(5);
 
 	private int type;
 
@@ -328,7 +328,7 @@ public class Cache {
 			case BUS_RD:
 				return BusState.NONE;// Need to flush
 			case BUS_RDX:
-				return BusState.NONE;// Need to flush
+				return BusState.NONE;// Need to flushs	
 			}
 		case SHARED:
 			switch (action) {
@@ -442,6 +442,8 @@ public class Cache {
 				return CacheState.SHARED;// Need to flush
 			case BUS_RDX:
 				return CacheState.INVALID;// Need to flush
+			case BUS_UPGR:
+				return CacheState.INVALID;
 			}
 		case EXCLUSIVE:
 			switch (action) {
@@ -455,6 +457,8 @@ public class Cache {
 				return CacheState.SHARED;
 			case BUS_RDX:
 				return CacheState.INVALID;// Need to flush
+			case BUS_UPGR:
+				return CacheState.INVALID;
 			}
 		case SHARED:
 			switch (action) {
@@ -468,6 +472,8 @@ public class Cache {
 				return CacheState.SHARED;
 			case BUS_RDX:
 				return CacheState.INVALID;// Need to flush
+			case BUS_UPGR:
+				return CacheState.INVALID;
 			}
 		case INVALID:
 			switch (action) {
@@ -480,6 +486,8 @@ public class Cache {
 			case BUS_RD:
 				return CacheState.INVALID;
 			case BUS_RDX:
+				return CacheState.INVALID;
+			case BUS_UPGR:
 				return CacheState.INVALID;
 			}
 		}
