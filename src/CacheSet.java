@@ -33,6 +33,7 @@ public class CacheSet {
 
 	public void installBlock(CacheBlock newBlock) {
 		blocks.put(newBlock.getTag(), newBlock);
+//		System.out.println(this.toString());
 	}
 
 	public String toString() {

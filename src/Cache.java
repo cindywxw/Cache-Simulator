@@ -54,7 +54,7 @@ public class Cache {
 	private int offsetBits;
 	private int indexBits;
 	private int tagBits;
-
+	public int counter;
 	private String protocol;
 
 	/**
@@ -80,6 +80,7 @@ public class Cache {
 		calculateBitLengths(blockSize, numSets);
 
 		this.protocol = protocol;
+		this.counter = 0;
 	}
 
 	/**
@@ -142,7 +143,7 @@ public class Cache {
 			System.out.println("Ooops, wrong protocol!");
 		}
 
-		System.out.println("Next BUS State:" + busState.name());
+//		System.out.println("Next BUS State:" + busState.name());
 
 		return busState.getType();
 	}
@@ -256,6 +257,7 @@ public class Cache {
 
 		if(createdBlock && next != CacheState.INVALID) {
 			dataCache.get(index).installBlock(block);
+			this.counter++;
 		}
 	}
 

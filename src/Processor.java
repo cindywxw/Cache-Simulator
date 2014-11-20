@@ -13,9 +13,10 @@ public class Processor {
 	public boolean inQueue;
 	public boolean done;
 	public int id;
-	public int misses;
-	public int hits;
+	public long misses;
+	public long hits;
 	public long cycles;
+	public long lines;
 
 	public Processor(String dir, int id, String protocol, int cacheSize,
 			int blockSize, int associativity) {
@@ -38,6 +39,7 @@ public class Processor {
 			this.misses = 0;
 			this.hits = 0;
 			this.cycles = 0;
+			this.lines = 0;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -67,10 +69,12 @@ public class Processor {
 					result = s[1];
 					s[0] = this.trace.readLine();
 					s[1] = this.trace.readLine();
+					this.lines = this.lines + 2;
 				} else {
 					result = s[0];
 					s[0] = s[1];
 					s[1] = this.trace.readLine();
+					this.lines++;
 				}
 				if (s[0] == null && s[1] == null) {
 					this.done = true;
