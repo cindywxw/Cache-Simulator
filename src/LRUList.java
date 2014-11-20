@@ -3,7 +3,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.ArrayList;
 
-public class LRUCache<K,V> {
+public class LRUList<K,V> {
 
 private static final float   hashTableLoadFactor = 0.75f;
 
@@ -14,14 +14,14 @@ private int                  cacheSize;
 * Creates a new LRU cache.
 * @param cacheSize the maximum number of entries that will be kept in this cache.
 */
-public LRUCache (int cacheSize) {
+public LRUList (int cacheSize) {
    this.cacheSize = cacheSize;
    int hashTableCapacity = (int)Math.ceil(cacheSize / hashTableLoadFactor) + 1;
    map = new LinkedHashMap<K,V>(hashTableCapacity, hashTableLoadFactor, true) {
       // (an anonymous inner class)
       private static final long serialVersionUID = 1;
       @Override protected boolean removeEldestEntry (Map.Entry<K,V> eldest) {
-         return size() > LRUCache.this.cacheSize; }}; }
+         return size() > LRUList.this.cacheSize; }}; }
 
 /**
 * Retrieves an entry from the cache.<br>

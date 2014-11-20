@@ -10,10 +10,10 @@ import java.util.Map;
 public class CacheSet {
 
 	private int ways;
-	private LRUCache<Integer, CacheBlock> blocks;
+	private LRUList<Integer, CacheBlock> blocks;
 
 	public CacheSet(int associativity) {
-		blocks = new LRUCache<Integer, CacheBlock>(associativity);
+		blocks = new LRUList<Integer, CacheBlock>(associativity);
 
 		ways = associativity;
 	}
