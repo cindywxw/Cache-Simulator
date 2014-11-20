@@ -15,7 +15,7 @@ enum CacheState {
 }
 
 enum BusState {
-	NONE(0), BUSRD(4), BUSRDX(5);
+	NONE(0), BUSRD(4), BUSRDX(5), BUSUPGR(7);
 
 	private int type;
 
@@ -337,7 +337,7 @@ public class Cache {
 			case READ_E:
 				return BusState.NONE;
 			case WRITE:
-				return BusState.BUSRDX;// Need to send BusRd_Ex
+				return BusState.BUSUPGR;// Send BUS UPGRD
 			case BUS_RD:
 				return BusState.NONE;
 			case BUS_RDX:
