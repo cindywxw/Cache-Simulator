@@ -27,6 +27,10 @@ public class CacheSet {
 		}
 	}
 	
+	/**
+	 * Allows to remove block from cache set
+	 * @param block
+	 */
 	public void remove(CacheBlock block) {
 		blocks.remove(block.getTag());
 	}
