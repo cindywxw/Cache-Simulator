@@ -48,7 +48,7 @@ public class Cache {
 	// Protocol constants
 	private static final String PROTOCOL_MESI = "MESI";
 	private static final String PROTOCOL_MSI = "MSI";
-	private static final int WORD_SIZE = 16;
+	private static final int WORD_SIZE = 2;
 
 	private ArrayList<CacheSet> dataCache;
 	private int offsetBits;
@@ -94,8 +94,8 @@ public class Cache {
 		this.offsetBits = (int) (Math.log(blockSize / WORD_SIZE) / Math.log(2));
 		this.tagBits = 32 - this.indexBits - this.offsetBits;
 
-//		System.out.println("Bits Index:" + indexBits + " Offset:" + offsetBits
-//				+ " Tag:" + tagBits);
+		System.out.println("Bits Index:" + indexBits + " Offset:" + offsetBits
+				+ " Tag:" + tagBits);
 	}
 
 	/**

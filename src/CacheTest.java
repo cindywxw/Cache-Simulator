@@ -4,7 +4,7 @@ public class CacheTest {
 
 	public static void main(String[] args) {
 		// Test cache
-		Cache dataCache = new Cache("MESI", 4096, 64, 4);
+		Cache dataCache = new Cache("MESI", 1024, 16, 2);
 		
 		System.out.println("HIT:" + dataCache.isHit(0x000000C0));
 		System.out.println("NEXT BUS 1:" + dataCache.getNextBusState(0x000000C0, 2));
