@@ -95,8 +95,8 @@ public class Cache {
 		this.offsetBits = (int) (Math.log(blockSize / WORD_SIZE) / Math.log(2));
 		this.tagBits = 32 - this.indexBits - this.offsetBits;
 
-		System.out.println("Bits Index:" + indexBits + " Offset:" + offsetBits
-				+ " Tag:" + tagBits);
+//		System.out.println("Bits Index:" + indexBits + " Offset:" + offsetBits
+//				+ " Tag:" + tagBits);
 	}
 
 	/**

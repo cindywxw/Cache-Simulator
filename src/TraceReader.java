@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.LinkedList;
 
 public class TraceReader {
@@ -61,7 +60,6 @@ public class TraceReader {
 		Processor p;
 		Quadrupel q = null;
 		LinkedList<Quadrupel> busList = new LinkedList<Quadrupel>();
-//		PrintWriter writer = new PrintWriter("outBig.txt", "UTF-8");
 		while (true) {
 			for (int j = 0; j < coreCount; j++) {
 				if (processorArray[j].done)
@@ -72,21 +70,19 @@ public class TraceReader {
 						+ (System.nanoTime() - start) / 1000000000
 						+ "s------------");
 				printResults(cycles, processorArray, busCount, busNotUsed);
-//				writer.close();
 				return;// All traces have been processed
 			}
-			
 			cycles++;
-			if(cycles % 4000000 == 0) System.out.println(processorArray[0].cache);
+//			if (cycles % 4000000 == 0)
+//				System.out.println(processorArray[0].cache);
+
 			for (int i = 0; i < coreCount; i++) {// Process cycle operations for
 													// all cores
 				p = processorArray[i];
-				if ((!p.inQueue) || (p.done)) { // Processor not blocked by
-												// being in
-					// BusQueue
+				if ((!p.inQueue) || (p.done)) {
+					// Processor not blocked by being in BusQueue
 					p.cycles++;
 					s = p.getCycle();
-//					System.out.println(s);
 					split = s.split(" ");
 					action = Integer.parseInt(split[0]);
 					if (action != 0) { // Action is read or write
@@ -95,17 +91,11 @@ public class TraceReader {
 						busAction = p.cache.getNextBusState(address, action);
 						if (p.cache.isHit(address)) {
 							p.hits++;
-//							writer.println(s + " hit");
 						} else {
 							p.misses++;
-//							writer.println(s + " miss");
-
 						}
-						if (busAction == 0) { // Read or Write doesn't
-												// require
-												// bus
-												// System.out.print(Long.toHexString(address));
-							// System.out.println(p.cache);
+						if (busAction == 0) {
+							// Read or Write doesn't require bus
 							p.cache.updateToNextState(address, action);
 						} else {// Read or write requires bus
 							busList.add(new Quadrupel(p, address, busAction,
@@ -129,7 +119,11 @@ public class TraceReader {
 					busCount = busCount + 16;
 					for (int i = 0; i < coreCount; i++) {
 						if (i != q.p.id) {
-							if (processorArray[i].cache.isHit(q.address)) { // Other cache has needed data
+							if (processorArray[i].cache.isHit(q.address)) { // Other
+																			// cache
+																			// has
+																			// needed
+																			// data
 								blockTime = 1;
 								hitFlag = true; // Accessing shared data
 								processorArray[i].cache.updateToNextState(
@@ -142,7 +136,8 @@ public class TraceReader {
 					} else if (q.busAction == 4) { // BusRead
 						if (!hitFlag) {
 							blockTime = 10; // No cache has needed data
-							if(args[0].equals("MESI"))q.action = 6; // Read of exclusive data
+							if (args[0].equals("MESI"))
+								q.action = 6; // Read of exclusive data
 						} else {
 							blockTime = 1;
 						}
@@ -178,7 +173,7 @@ public class TraceReader {
 		System.out.println("Cycles taken: " + cycles);
 		System.out.println("Bytes transfered on bus: " + busCount);
 		System.out.println("Cycles in which bus was not used: " + busNotUsed);
-		
+
 		for (int i = 1; i <= length; i++) {
 			System.out.println("Number of execution Cycles Processor " + i
 					+ ": " + processors[i - 1].cycles);
@@ -186,12 +181,12 @@ public class TraceReader {
 					+ processors[i - 1].hits);
 			System.out.println("Number of cache misses Processor " + i + ": "
 					+ processors[i - 1].misses);
-			misses = misses + processors[i-1].misses;
-			hits = hits + processors[i-1].hits;
-			System.out.println("Lines: " + processors[i-1].lines);
-			
+			misses = misses + processors[i - 1].misses;
+			hits = hits + processors[i - 1].hits;
+
 		}
-			System.out.println("Miss Rate: " + 100*misses/(misses + hits) + "%");
-			System.out.println("------------------");
+		System.out
+				.println("Miss Rate: " + 100 * misses / (misses + hits) + "%");
+		System.out.println("------------------");
 	}
 }
