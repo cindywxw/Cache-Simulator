@@ -6,6 +6,8 @@ public class TraceReader {
 	private static int blockTime;
 	private static int coreCount;
 	public static int done = 0;
+	static int accesses = 0;
+	static int busAccesses = 0;
 
 	/*
 	 * Actions: 0: Fetch Instruction 1: Nothing 2: PrRead 3: PrWrite 4: BusRead
@@ -13,6 +15,7 @@ public class TraceReader {
 	 * invalid)
 	 */
 	public static void main(String[] args) throws IOException {
+		
 		long start = System.nanoTime();
 		System.out.println("Protocol: " + args[0]);
 		System.out.println("Benchmark: " + args[1]);
@@ -57,10 +60,13 @@ public class TraceReader {
 		int busNotUsed = 0;
 		int action;
 		int busAction;
+		int blockSize = Integer.parseInt(args[5]);
 		Processor p;
 		Quadrupel q = null;
 		LinkedList<Quadrupel> busList = new LinkedList<Quadrupel>();
+		
 		while (true) {
+			
 			for (int j = 0; j < coreCount; j++) {
 				if (processorArray[j].done)
 					done++;
@@ -72,6 +78,7 @@ public class TraceReader {
 				printResults(cycles, processorArray, busCount, busNotUsed);
 				return;// All traces have been processed
 			}
+			
 			cycles++;
 //			if (cycles % 4000000 == 0)
 //				System.out.println(processorArray[0].cache);
@@ -86,8 +93,9 @@ public class TraceReader {
 					split = s.split(" ");
 					action = Integer.parseInt(split[0]);
 					if (action != 0) { // Action is read or write
+						accesses++;
 						address = Long.parseLong(split[1], 16);
-						address = address >> 8;
+						//address = address >> 8;
 						busAction = p.cache.getNextBusState(address, action);
 						if (p.cache.isHit(address)) {
 							p.hits++;
@@ -101,6 +109,7 @@ public class TraceReader {
 							busList.add(new Quadrupel(p, address, busAction,
 									action));
 							p.inQueue = true;
+							busAccesses++;
 						}
 					}
 				}
@@ -116,14 +125,10 @@ public class TraceReader {
 			} else {
 				q = busList.pollFirst();
 				if (q != null) {
-					busCount = busCount + 16;
+					busCount = busCount + blockSize;
 					for (int i = 0; i < coreCount; i++) {
 						if (i != q.p.id) {
-							if (processorArray[i].cache.isHit(q.address)) { // Other
-																			// cache
-																			// has
-																			// needed
-																			// data
+							if (processorArray[i].cache.isHit(q.address)) { // Other cache has needed data												
 								blockTime = 1;
 								hitFlag = true; // Accessing shared data
 								processorArray[i].cache.updateToNextState(
@@ -173,6 +178,7 @@ public class TraceReader {
 		System.out.println("Cycles taken: " + cycles);
 		System.out.println("Bytes transfered on bus: " + busCount);
 		System.out.println("Cycles in which bus was not used: " + busNotUsed);
+		System.out.println(" ");
 
 		for (int i = 1; i <= length; i++) {
 			System.out.println("Number of execution Cycles Processor " + i
@@ -181,12 +187,16 @@ public class TraceReader {
 					+ processors[i - 1].hits);
 			System.out.println("Number of cache misses Processor " + i + ": "
 					+ processors[i - 1].misses);
+			System.out.println(" ");
 			misses = misses + processors[i - 1].misses;
 			hits = hits + processors[i - 1].hits;
 
 		}
 		System.out
 				.println("Miss Rate: " + 100 * misses / (misses + hits) + "%");
+		System.out.println("Memory Accesses: " + accesses);
+		System.out.println("Bus Accesses: " + busAccesses);
+
 		System.out.println("------------------");
 	}
 }
