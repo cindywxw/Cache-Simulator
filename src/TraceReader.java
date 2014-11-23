@@ -80,8 +80,6 @@ public class TraceReader {
 			}
 			
 			cycles++;
-//			if (cycles % 4000000 == 0)
-//				System.out.println(processorArray[0].cache);
 
 			for (int i = 0; i < coreCount; i++) {// Process cycle operations for
 													// all cores

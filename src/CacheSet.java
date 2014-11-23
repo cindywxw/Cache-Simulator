@@ -9,13 +9,10 @@ import java.util.Map;
  */
 public class CacheSet {
 
-	private int ways;
 	private LRUList<Integer, CacheBlock> blocks;
 
 	public CacheSet(int associativity) {
 		blocks = new LRUList<Integer, CacheBlock>(associativity);
-
-		ways = associativity;
 	}
 
 	public CacheBlock getBlockForTag(int tag) {
@@ -37,7 +34,6 @@ public class CacheSet {
 
 	public void installBlock(CacheBlock newBlock) {
 		blocks.put(newBlock.getTag(), newBlock);
-//		System.out.println(this.toString());
 	}
 
 	public String toString() {
